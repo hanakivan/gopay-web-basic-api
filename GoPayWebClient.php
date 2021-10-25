@@ -1,6 +1,7 @@
 <?php
 
 use GoPay\Payments;
+use Psr\Log\LoggerInterface;
 
 //https://github.com/gopaycommunity/gopay-php-api
 class GoPayWebClient {
@@ -9,7 +10,7 @@ class GoPayWebClient {
 
     private Payments $client;
 
-    public function __construct(string $goId, string $clientId, string $clientSecret, string $gatewayUri)
+    public function __construct(string $goId, string $clientId, string $clientSecret, string $gatewayUri, private ?LoggerInterface $logger = null)
     {
         $this->client = GoPay\Api::payments([
             'goid' => $goId,
@@ -17,11 +18,21 @@ class GoPayWebClient {
             'clientSecret' => $clientSecret,
             'gatewayUrl' => $gatewayUri
         ]);
+
+        $this->logger->info('Initializing client', [
+            "ts" => (new DateTime())->format("c"),
+        ]);
     }
 
     //https://doc.gopay.com/#payment-creation
     public function createPayment(float $amount, string $currency, string $orderNumber, string $userName, string $userEmail, string $userCountry): int
     {
+        $this->logger->debug('Request: Creating payment', [
+            "amount" => $amount,
+            "currency" => $currency,
+            "order_number" => $orderNumber,
+        ]);
+
         $response = $this->client->createPayment([
             "amount" => $amount,
             "currency" => $currency,
@@ -32,9 +43,16 @@ class GoPayWebClient {
             ],
         ]);
 
+        $this->logger->debug('Response: Creating payment', [
+            "code" => $response->statusCode,
+            "raw" => (string)$response,
+        ]);
+
         if($response->hasSucceed()) {
             return (int)$response->json['3000006529'];
         } else {
+            $this->logger->debug('ERROR: Creating payment');
+
             throw new GoPayWebClientResponseException((string)$response, $response->statusCode);
         }
     }
