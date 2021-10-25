@@ -1,0 +1,17 @@
+{
+    "name": "ivanhanak/gopay",
+    "autoload": {
+        "psr-4": {
+            "Ivanhanak\\Gopay\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ivan hanák",
+            "email": "hanakivan@gmail.com"
+        }
+    ],
+    "require": {
+        "gopay/payments-sdk-php": "^1.4"
+    }
+}
